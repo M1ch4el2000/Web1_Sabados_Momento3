@@ -317,3 +317,68 @@ SELECT
 FROM recluta
 GROUP BY estado
 HAVING COUNT(*) >= 3;
+
+GO
+
+-- Procedimiento almacenado 1: Inserción compleja de un nuevo recluta
+CREATE PROCEDURE registrar_recluta
+    @nombre VARCHAR(50),
+    @apellido VARCHAR(50),
+    @edad INT,
+    @peso DECIMAL(5,2),
+    @altura DECIMAL(3,2),
+    @ramas_unsc_id INT,
+    @entidad_id INT 
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- Validar edad mínima por seguridad
+    IF @edad < 18
+    BEGIN
+        RAISERROR('El recluta debe ser mayor de edad (>= 18) para enlistarse en el UNSC.', 16, 1);
+        RETURN;
+    END
+
+    -- Insertar recluta (los valores por DEFECTO se encargan del estado y fecha)
+    INSERT INTO recluta (nombre, apellido, edad, peso, altura, ramas_unsc_id, entidad_id)
+    VALUES (@nombre, @apellido, @edad, @peso, @altura, @ramas_unsc_id, @entidad_id);
+
+    PRINT 'Recluta registrado exitosamente bajo estado inicial: En evaluacion.';
+END;
+GO
+
+-- Procedimiento almacenado 2: Reporte calculado por ID de Recluta
+CREATE PROCEDURE estado_recluta_report
+    @recluta_id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Validar si existe el recluta
+    IF NOT EXISTS (SELECT 1 FROM recluta WHERE id = @recluta_id)
+    BEGIN
+        RAISERROR('El ID de recluta especificado no existe en el sistema.', 16, 1);
+        RETURN;
+    END
+
+    -- Retornar información general y su desempeño en divisiones especiales
+    SELECT 
+        r.id AS id_recluta,
+        r.nombre + ' ' + r.apellido AS nombre_completo,
+        r.edad,
+        r.estado AS estado_actual,
+        r.fecha_registro,
+        ISNULL(de.nombre, 'Sin division asignada') AS division_evaluada,
+        ISNULL(a.puntaje, 0) AS puntaje_obtenido,
+        CASE 
+            WHEN a.apto_servicio = 1 THEN 'Apto'
+            WHEN a.apto_servicio = 0 THEN 'No Apto'
+            ELSE 'Pendiente'
+        END AS resultado_evaluacion
+    FROM recluta r
+    LEFT JOIN apto_division_especial a ON r.id = a.recluta_id
+    LEFT JOIN divisiones_especiales de ON a.divisiones_especiales_id = de.id
+    WHERE r.id = @recluta_id;
+END;
+GO
