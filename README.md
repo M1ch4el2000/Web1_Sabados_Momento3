@@ -55,18 +55,6 @@ Esta es la base de datos de nuestro proyecto de reclutamiento del UNSC. Guarda l
 
 Las tablas se relacionan así: una rama tiene varias unidades y varios reclutas, una unidad tiene varios centros de reclutamiento y cada centro recibe reclutas. Un recluta puede tener varias evaluaciones, y por eso hicimos la tabla `apto_division_especial`, que une a los reclutas con las divisiones.
 
-## Procedimientos almacenados
-
-- `registrar_recluta`: inscribe un recluta nuevo. Revisa que sea mayor de edad y lo guarda con estado "En evaluacion" y la fecha de hoy.
-- `estado_recluta_report`: recibe el id de un recluta y muestra sus datos, su estado y los resultados de sus evaluaciones.
-
-```sql
-EXEC registrar_recluta @nombre = 'Luisa', @apellido = 'Torres', @edad = 25,
-    @peso = 60.5, @altura = 1.68, @ramas_unsc_id = 7, @entidad_id = 11;
-
-EXEC estado_recluta_report @recluta_id = 3;
-```
-
 ## Relación con los otros submódulos
 
 El proyecto tiene tres partes que entregamos en materias distintas: esta base de datos, el backend en Java (Programación Orientada a Objetos) y el frontend en HTML, CSS y JavaScript. Todavía no están conectadas, eso lo vamos a hacer en el tercer semestre. Por ahora cada una funciona por separado, pero las tres parten del mismo tema.
